@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Models.MenuCategory;
 
 namespace Resturant.API.Controllers
 {
@@ -13,53 +16,48 @@ namespace Resturant.API.Controllers
     [ApiController]
     public class MenuCategoriesController : ControllerBase
     {
-        private readonly ResturantDbContext _context;
+        private readonly IMenuCategories _menuCategoriesRepository;
+        private readonly IMapper _mapper;
 
-        public MenuCategoriesController(ResturantDbContext context)
+        public MenuCategoriesController(IMenuCategories menuCategoriesRepository, IMapper mapper)
         {
-            _context = context;
+            
+            this._menuCategoriesRepository = menuCategoriesRepository;
+            this._mapper = mapper;
         }
 
         // GET: api/MenuCategories
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<MenuCategory>>> GetMenuCategories()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<GetMenuCategoryDto>>> GetMenuCategories()
         {
-            return await _context.MenuCategories.ToListAsync();
+            var records = await _menuCategoriesRepository.GetAllAsync<GetMenuCategoryDto>();
+            return Ok(records);
         }
 
         // GET: api/MenuCategories/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<MenuCategory>> GetMenuCategory(int id)
+        public async Task<ActionResult<MenuCategoryDto>> GetMenuCategory(int id)
         {
-            var menuCategory = await _context.MenuCategories.FindAsync(id);
-
-            if (menuCategory == null)
-            {
-                return NotFound();
-            }
-
-            return menuCategory;
+            var MenuCategoryDto = await _menuCategoriesRepository.GetDetails(id);
+            return Ok(MenuCategoryDto);
         }
 
         // PUT: api/MenuCategories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMenuCategory(int id, MenuCategory menuCategory)
+        public async Task<IActionResult> PutMenuCategory(int id, MenuCategoryDto menuCategoryDto)
         {
-            if (id != menuCategory.CategoryID)
+            if (id != menuCategoryDto.CategoryID)
             {
                 return BadRequest();
             }
-
-            _context.Entry(menuCategory).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _menuCategoriesRepository.UpdateAsync(id, menuCategoryDto);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MenuCategoryExists(id))
+                if (! await MenuCategoryExists(id))
                 {
                     return NotFound();
                 }
@@ -75,33 +73,24 @@ namespace Resturant.API.Controllers
         // POST: api/MenuCategories
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<MenuCategory>> PostMenuCategory(MenuCategory menuCategory)
+        public async Task<ActionResult<MenuCategory>> PostMenuCategory(CreateMenuCategoryDto createMenuCategoryDto)
         {
-            _context.MenuCategories.Add(menuCategory);
-            await _context.SaveChangesAsync();
+            var menuCategoryDto = await _menuCategoriesRepository.AddAsync<CreateMenuCategoryDto, GetMenuCategoryDto>(createMenuCategoryDto);
 
-            return CreatedAtAction("GetMenuCategory", new { id = menuCategory.CategoryID }, menuCategory);
+            return CreatedAtAction("GetMenuCategory", new { id = menuCategoryDto.CategoryID }, menuCategoryDto);
         }
 
         // DELETE: api/MenuCategories/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMenuCategory(int id)
         {
-            var menuCategory = await _context.MenuCategories.FindAsync(id);
-            if (menuCategory == null)
-            {
-                return NotFound();
-            }
-
-            _context.MenuCategories.Remove(menuCategory);
-            await _context.SaveChangesAsync();
-
+            await _menuCategoriesRepository.DeleteAsync(id);
             return NoContent();
         }
 
-        private bool MenuCategoryExists(int id)
+        private async Task<bool> MenuCategoryExists(int id)
         {
-            return _context.MenuCategories.Any(e => e.CategoryID == id);
+            return await _menuCategoriesRepository.Exists(id);
         }
     }
 }

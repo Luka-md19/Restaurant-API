@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Models.MenuItem;
 
 namespace Resturant.API.Controllers
 {
@@ -13,53 +12,46 @@ namespace Resturant.API.Controllers
     [ApiController]
     public class MenuItemsController : ControllerBase
     {
-        private readonly ResturantDbContext _context;
+        private readonly IMenuItems _menuItemsRepository;
+        private readonly IMapper _mapper;
 
-        public MenuItemsController(ResturantDbContext context)
+        public MenuItemsController(IMenuItems menuItemsRepository , IMapper mapper)
         {
-            _context = context;
+            _menuItemsRepository = menuItemsRepository;
+            this._mapper = mapper;
         }
 
         // GET: api/MenuItems
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<MenuItem>>> GetMenuItems()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<GetMenuItemsDto>>> GetMenuItems()
         {
-            return await _context.MenuItems.ToListAsync();
+            var records = await _menuItemsRepository.GetAllAsync<GetMenuItemsDto>();
+            return Ok(records);
         }
 
         // GET: api/MenuItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<MenuItem>> GetMenuItem(int id)
+        public async Task<ActionResult<MenuItemDto>> GetMenuItem(int id)
         {
-            var menuItem = await _context.MenuItems.FindAsync(id);
-
-            if (menuItem == null)
-            {
-                return NotFound();
-            }
-
-            return menuItem;
+            var MenuItemDto = await _menuItemsRepository.GetMenuItemsDetails(id);
+            return Ok(MenuItemDto);
         }
 
         // PUT: api/MenuItems/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMenuItem(int id, MenuItem menuItem)
+        public async Task<IActionResult> PutMenuItem(int id, MenuItemDto menuItemDto)
         {
-            if (id != menuItem.ItemID)
+            if (id != menuItemDto.ItemID)
             {
                 return BadRequest();
             }
-
-            _context.Entry(menuItem).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _menuItemsRepository.UpdateAsync(id, menuItemDto);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MenuItemExists(id))
+                if (!await MenuItemExists(id))
                 {
                     return NotFound();
                 }
@@ -73,35 +65,25 @@ namespace Resturant.API.Controllers
         }
 
         // POST: api/MenuItems
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<MenuItem>> PostMenuItem(MenuItem menuItem)
+        public async Task<ActionResult<MenuItem>> PostMenuItem(CreateMenuItemsDto createMenuItemDto)
         {
-            _context.MenuItems.Add(menuItem);
-            await _context.SaveChangesAsync();
+            var menuItemDto = await _menuItemsRepository.AddAsync<CreateMenuItemsDto, GetMenuItemsDto>(createMenuItemDto);
 
-            return CreatedAtAction("GetMenuItem", new { id = menuItem.ItemID }, menuItem);
+            return CreatedAtAction("GetMenuItem", new { id = menuItemDto.ItemID }, menuItemDto);
         }
 
         // DELETE: api/MenuItems/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMenuItem(int id)
         {
-            var menuItem = await _context.MenuItems.FindAsync(id);
-            if (menuItem == null)
-            {
-                return NotFound();
-            }
-
-            _context.MenuItems.Remove(menuItem);
-            await _context.SaveChangesAsync();
-
+            await _menuItemsRepository.DeleteAsync(id);
             return NoContent();
         }
 
-        private bool MenuItemExists(int id)
+        private async Task<bool> MenuItemExists(int id)
         {
-            return _context.MenuItems.Any(e => e.ItemID == id);
+            return await _menuItemsRepository.Exists(id);
         }
     }
 }

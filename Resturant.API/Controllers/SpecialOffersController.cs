@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Models.SpecialOffer;
 
 namespace Resturant.API.Controllers
 {
@@ -13,53 +11,44 @@ namespace Resturant.API.Controllers
     [ApiController]
     public class SpecialOffersController : ControllerBase
     {
-        private readonly ResturantDbContext _context;
+        private readonly ISpecialOffersRepository _specialOffersRepository;
 
-        public SpecialOffersController(ResturantDbContext context)
+        public SpecialOffersController(ISpecialOffersRepository specialOffersRepository)
         {
-            _context = context;
+            _specialOffersRepository = specialOffersRepository;
         }
 
         // GET: api/SpecialOffers
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<SpecialOffer>>> GetSpecialOffers()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<GetSpecialOfferDto>>> GetSpecialOffers()
         {
-            return await _context.SpecialOffers.ToListAsync();
+            var records = await _specialOffersRepository.GetAllAsync<GetSpecialOfferDto>();
+            return Ok(records);
         }
 
         // GET: api/SpecialOffers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<SpecialOffer>> GetSpecialOffer(int id)
+        public async Task<ActionResult<SpecialOfferDto>> GetSpecialOffer(int id)
         {
-            var specialOffer = await _context.SpecialOffers.FindAsync(id);
-
-            if (specialOffer == null)
-            {
-                return NotFound();
-            }
-
-            return specialOffer;
+            var specialOfferDto = await _specialOffersRepository.GetAsync<SpecialOfferDto>(id);
+            return Ok(specialOfferDto);
         }
 
         // PUT: api/SpecialOffers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSpecialOffer(int id, SpecialOffer specialOffer)
+        public async Task<IActionResult> PutSpecialOffer(int id, SpecialOfferDto specialOfferDto)
         {
-            if (id != specialOffer.OfferID)
+            if (id != specialOfferDto.OfferID)
             {
                 return BadRequest();
             }
-
-            _context.Entry(specialOffer).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _specialOffersRepository.UpdateAsync<SpecialOfferDto>(id, specialOfferDto);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SpecialOfferExists(id))
+                if (!await SpecialOfferExists(id))
                 {
                     return NotFound();
                 }
@@ -73,35 +62,25 @@ namespace Resturant.API.Controllers
         }
 
         // POST: api/SpecialOffers
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<SpecialOffer>> PostSpecialOffer(SpecialOffer specialOffer)
+        public async Task<ActionResult<SpecialOffer>> PostSpecialOffer(CreateSpecialOfferDto createSpecialOfferDto)
         {
-            _context.SpecialOffers.Add(specialOffer);
-            await _context.SaveChangesAsync();
+            var specialOfferDto = await _specialOffersRepository.AddAsync<CreateSpecialOfferDto, GetSpecialOfferDto>(createSpecialOfferDto);
 
-            return CreatedAtAction("GetSpecialOffer", new { id = specialOffer.OfferID }, specialOffer);
+            return CreatedAtAction("GetSpecialOffer", new { id = specialOfferDto.OfferID }, specialOfferDto);
         }
 
         // DELETE: api/SpecialOffers/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSpecialOffer(int id)
         {
-            var specialOffer = await _context.SpecialOffers.FindAsync(id);
-            if (specialOffer == null)
-            {
-                return NotFound();
-            }
-
-            _context.SpecialOffers.Remove(specialOffer);
-            await _context.SaveChangesAsync();
-
+            await _specialOffersRepository.DeleteAsync(id);
             return NoContent();
         }
 
-        private bool SpecialOfferExists(int id)
+        private async Task<bool> SpecialOfferExists(int id)
         {
-            return _context.SpecialOffers.Any(e => e.OfferID == id);
+            return await _specialOffersRepository.Exists(id);
         }
     }
 }
