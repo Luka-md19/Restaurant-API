@@ -1,20 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Resturant.API.Data
+﻿namespace Resturant.API.Models.ItemDescription
 {
-    public class ItemDescription
+    public abstract class BaseItemDescriptionDto 
     {
-        [Key]
         public int ItemID { get; set; }
-
         public string DescriptionText { get; set; }
         public string AllergenInfo { get; set; }
         public string NutritionalInfo { get; set; }
         public string Language { get; set; }
-
-        
-       
-        public virtual MenuItem MenuItem { get; set; }
     }
 }

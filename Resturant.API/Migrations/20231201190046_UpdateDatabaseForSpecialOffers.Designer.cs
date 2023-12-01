@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Resturant.API.Data;
 
@@ -11,9 +12,11 @@ using Resturant.API.Data;
 namespace Resturant.API.Migrations
 {
     [DbContext(typeof(ResturantDbContext))]
-    partial class ResturantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231201190046_UpdateDatabaseForSpecialOffers")]
+    partial class UpdateDatabaseForSpecialOffers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -138,17 +141,17 @@ namespace Resturant.API.Migrations
                     b.Property<string>("ItemName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OfferID")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("SpecialOfferID")
+                        .HasColumnType("int");
 
                     b.HasKey("ItemID");
 
                     b.HasIndex("CategoryID");
 
-                    b.HasIndex("OfferID");
+                    b.HasIndex("SpecialOfferID");
 
                     b.ToTable("MenuItems");
 
@@ -308,7 +311,7 @@ namespace Resturant.API.Migrations
 
                     b.HasOne("Resturant.API.Data.SpecialOffer", "SpecialOffer")
                         .WithMany("MenuItems")
-                        .HasForeignKey("OfferID");
+                        .HasForeignKey("SpecialOfferID");
 
                     b.Navigation("MenuCategory");
 

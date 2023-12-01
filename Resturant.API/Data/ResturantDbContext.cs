@@ -53,7 +53,7 @@ namespace Resturant.API.Data
                     Price = 1.5m,
                     ItemImage = "path/to/coke_image.jpg",
                     DisplayOrder = 1,
-                    SpecialOfferID = null,
+                    OfferID = 1,
                     IsDishOfTheDay = false
                 },
                 new MenuItem
@@ -64,7 +64,7 @@ namespace Resturant.API.Data
                     Price = 1.5m,
                     ItemImage = "path/to/pepsi_image.jpg",
                     DisplayOrder = 2,
-                    SpecialOfferID = null,
+                    OfferID = 2,
                     IsDishOfTheDay = false
                 },
                 new MenuItem
@@ -75,7 +75,7 @@ namespace Resturant.API.Data
                     Price = 2.5m,
                     ItemImage = "path/to/french_fries_image.jpg",
                     DisplayOrder = 1,
-                    SpecialOfferID = null,
+                    OfferID = 3,
                     IsDishOfTheDay = true
                 }
             );
@@ -166,6 +166,25 @@ namespace Resturant.API.Data
                 }
             );
 
+            modelBuilder.Entity<ItemDescription>()
+      .HasOne(id => id.MenuItem)
+      .WithOne(mi => mi.ItemDescription)
+      .HasForeignKey<ItemDescription>(id => id.ItemID);
+
+            modelBuilder.Entity<MenuItem>()
+                .HasOne(mi => mi.MenuCategory)
+                .WithMany(mc => mc.MenuItems)
+                .HasForeignKey(mi => mi.CategoryID);
+
+            modelBuilder.Entity<MenuItem>()
+                .HasOne(mi => mi.SpecialOffer)
+                .WithMany(so => so.MenuItems)
+                .HasForeignKey(mi => mi.OfferID);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.MenuItem)
+                .WithMany(mi => mi.Reviews)
+                .HasForeignKey(r => r.ItemID);
         }
 
 

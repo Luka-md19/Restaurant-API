@@ -10,7 +10,7 @@ namespace Resturant.API.Data
 
         public int ItemID { get; set; }
         [ForeignKey(nameof(ItemID))]
-        public virtual MenuItem MenuItem { get; set; }
+        public  MenuItem MenuItem { get; set; }
         public string Comment { get; set; }
         public int Rating { get; set; }
     }

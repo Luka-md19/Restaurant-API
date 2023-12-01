@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Models.ItemDescription;
+using Resturant.API.Repository;
 
 namespace Resturant.API.Controllers
 {
@@ -13,53 +13,44 @@ namespace Resturant.API.Controllers
     [ApiController]
     public class ItemDescriptionsController : ControllerBase
     {
-        private readonly ResturantDbContext _context;
+        private readonly IItemDescriptionRepository _itemDescriptionsRepository;
 
-        public ItemDescriptionsController(ResturantDbContext context)
+        public ItemDescriptionsController(IItemDescriptionRepository itemDescriptionsRepository)
         {
-            _context = context;
+            _itemDescriptionsRepository = itemDescriptionsRepository;
         }
 
         // GET: api/ItemDescriptions
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemDescription>>> GetItemDescriptions()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<GetItemDescriptionDto>>> GetItemDescriptions()
         {
-            return await _context.ItemDescriptions.ToListAsync();
+            var records = await _itemDescriptionsRepository.GetAllAsync<GetItemDescriptionDto>();
+            return Ok(records);
         }
 
         // GET: api/ItemDescriptions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ItemDescription>> GetItemDescription(int id)
+        public async Task<ActionResult<ItemDescriptionDto>> GetItemDescription(int id)
         {
-            var itemDescription = await _context.ItemDescriptions.FindAsync(id);
-
-            if (itemDescription == null)
-            {
-                return NotFound();
-            }
-
-            return itemDescription;
+            var itemDescriptionDto = await _itemDescriptionsRepository.GetAsync<ItemDescriptionDto>(id);
+            return Ok(itemDescriptionDto);
         }
 
         // PUT: api/ItemDescriptions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutItemDescription(int id, ItemDescription itemDescription)
+        public async Task<IActionResult> PutItemDescription(int id, ItemDescriptionDto itemDescriptionDto)
         {
-            if (id != itemDescription.ItemID)
+            if (id != itemDescriptionDto.ItemID)
             {
                 return BadRequest();
             }
-
-            _context.Entry(itemDescription).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _itemDescriptionsRepository.UpdateAsync<ItemDescriptionDto>(id, itemDescriptionDto);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ItemDescriptionExists(id))
+                if (!await ItemDescriptionExists(id))
                 {
                     return NotFound();
                 }
@@ -73,49 +64,25 @@ namespace Resturant.API.Controllers
         }
 
         // POST: api/ItemDescriptions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ItemDescription>> PostItemDescription(ItemDescription itemDescription)
+        public async Task<ActionResult<ItemDescription>> PostItemDescription(CreateItemDescriptionDto createItemDescriptionDto)
         {
-            _context.ItemDescriptions.Add(itemDescription);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (ItemDescriptionExists(itemDescription.ItemID))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var itemDescriptionDto = await _itemDescriptionsRepository.AddAsync<CreateItemDescriptionDto, GetItemDescriptionDto>(createItemDescriptionDto);
 
-            return CreatedAtAction("GetItemDescription", new { id = itemDescription.ItemID }, itemDescription);
+            return CreatedAtAction("GetItemDescription", new { id = itemDescriptionDto.ItemID }, itemDescriptionDto);
         }
 
         // DELETE: api/ItemDescriptions/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItemDescription(int id)
         {
-            var itemDescription = await _context.ItemDescriptions.FindAsync(id);
-            if (itemDescription == null)
-            {
-                return NotFound();
-            }
-
-            _context.ItemDescriptions.Remove(itemDescription);
-            await _context.SaveChangesAsync();
-
+            await _itemDescriptionsRepository.DeleteAsync(id);
             return NoContent();
         }
 
-        private bool ItemDescriptionExists(int id)
+        private async Task<bool> ItemDescriptionExists(int id)
         {
-            return _context.ItemDescriptions.Any(e => e.ItemID == id);
+            return await _itemDescriptionsRepository.Exists(id);
         }
     }
 }

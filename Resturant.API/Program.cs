@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Resturant.API.Configurations;
+using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Repository;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +26,14 @@ builder.Services.AddCors(options => {
 builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console()
     .ReadFrom.Configuration(ctx.Configuration));
+builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IMenuCategories, MenuCategories>();
+builder.Services.AddScoped<IMenuItems, MenuItems>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<ISpecialOffersRepository, SpecialOffersRepository>();
+builder.Services.AddScoped<IItemDescriptionRepository, ItemDescriptionRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
