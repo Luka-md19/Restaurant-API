@@ -7,7 +7,7 @@ namespace Resturant.API.Data
     {
         [Key]
         public int ItemID { get; set; }
-
+        
         public string DescriptionText { get; set; }
         public string AllergenInfo { get; set; }
         public string NutritionalInfo { get; set; }

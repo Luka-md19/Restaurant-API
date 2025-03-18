@@ -72,6 +72,7 @@ namespace Resturant.API.Controllers
             return CreatedAtAction("GetItemDescription", new { id = itemDescriptionDto.ItemID }, itemDescriptionDto);
         }
 
+
         // DELETE: api/ItemDescriptions/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItemDescription(int id)
@@ -86,3 +87,10 @@ namespace Resturant.API.Controllers
         }
     }
 }
+
+
+
+git commit -m "Initial commit of Market-Summary project"
+git branch -M main
+git remote add origin https://github.com/Luka-md19/Market-Summary.git
+git push -f origin main

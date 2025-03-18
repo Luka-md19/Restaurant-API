@@ -17,10 +17,55 @@ namespace Resturant.API.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.11")
+                .HasAnnotation("ProductVersion", "7.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Resturant.API.Data.AccountConfiguration", b =>
+                {
+                    b.Property<int>("AccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RestaurantId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Schema")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AccountId");
+
+                    b.ToTable("AccountConfigurations");
+
+                    b.HasData(
+                        new
+                        {
+                            AccountId = 1,
+                            Email = "email1@example.com",
+                            RestaurantId = "Restaurant1",
+                            Schema = "Schema1"
+                        },
+                        new
+                        {
+                            AccountId = 2,
+                            Email = "email2@example.com",
+                            RestaurantId = "Restaurant2",
+                            Schema = "Schema2"
+                        },
+                        new
+                        {
+                            AccountId = 3,
+                            Email = "email3@example.com",
+                            RestaurantId = "Restaurant3",
+                            Schema = "Schema3"
+                        });
+                });
 
             modelBuilder.Entity("Resturant.API.Data.ItemDescription", b =>
                 {
@@ -142,7 +187,8 @@ namespace Resturant.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("ItemID");
 
@@ -161,6 +207,7 @@ namespace Resturant.API.Migrations
                             IsDishOfTheDay = false,
                             ItemImage = "path/to/coke_image.jpg",
                             ItemName = "Coke",
+                            OfferID = 1,
                             Price = 1.5m
                         },
                         new
@@ -171,6 +218,7 @@ namespace Resturant.API.Migrations
                             IsDishOfTheDay = false,
                             ItemImage = "path/to/pepsi_image.jpg",
                             ItemName = "Pepsi",
+                            OfferID = 2,
                             Price = 1.5m
                         },
                         new
@@ -181,6 +229,7 @@ namespace Resturant.API.Migrations
                             IsDishOfTheDay = true,
                             ItemImage = "path/to/french_fries_image.jpg",
                             ItemName = "French Fries",
+                            OfferID = 3,
                             Price = 2.5m
                         });
                 });
@@ -229,6 +278,85 @@ namespace Resturant.API.Migrations
                             Comment = "Tasty fries!",
                             ItemID = 3,
                             Rating = 5
+                        });
+                });
+
+            modelBuilder.Entity("Resturant.API.Data.Schema.RestaurantData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AccountConfigurationsAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cover")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Logo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RestaurantId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountConfigurationsAccountId");
+
+                    b.ToTable("RestaurantData");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AccountId = 0,
+                            Address = "123 Foodie Lane, Gourmet City",
+                            BrandCode = "GK001",
+                            Cover = "path/to/cover1.jpg",
+                            Description = "A fine dining experience with a variety of international cuisines.",
+                            Email = "contact@gourmetkitchen.com",
+                            Logo = "path/to/logo1.jpg",
+                            Name = "The Gourmet Kitchen",
+                            Phone = "123-456-7890",
+                            RestaurantId = "one2one"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AccountId = 0,
+                            Address = "456 Casual Street, Food Town",
+                            BrandCode = "CB002",
+                            Cover = "path/to/cover2.jpg",
+                            Description = "A casual place for friends and family to enjoy a great meal.",
+                            Email = "hello@casualbites.com",
+                            Logo = "path/to/logo2.jpg",
+                            Name = "Casual Bites",
+                            Phone = "234-567-8901",
+                            RestaurantId = "Rest002"
                         });
                 });
 
@@ -324,6 +452,20 @@ namespace Resturant.API.Migrations
                         .IsRequired();
 
                     b.Navigation("MenuItem");
+                });
+
+            modelBuilder.Entity("Resturant.API.Data.Schema.RestaurantData", b =>
+                {
+                    b.HasOne("Resturant.API.Data.AccountConfiguration", "AccountConfigurations")
+                        .WithMany("RestaurantData")
+                        .HasForeignKey("AccountConfigurationsAccountId");
+
+                    b.Navigation("AccountConfigurations");
+                });
+
+            modelBuilder.Entity("Resturant.API.Data.AccountConfiguration", b =>
+                {
+                    b.Navigation("RestaurantData");
                 });
 
             modelBuilder.Entity("Resturant.API.Data.MenuCategory", b =>

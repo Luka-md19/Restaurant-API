@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using Resturant.API.Data.Schema;
 
 namespace Resturant.API.Data
 {
@@ -15,10 +17,45 @@ namespace Resturant.API.Data
         public DbSet<ItemDescription> ItemDescriptions { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<SpecialOffer> SpecialOffers { get; set; }
+        public DbSet<AccountConfiguration> AccountConfigurations { get; set; }
+        public DbSet<RestaurantData> RestaurantData { get; set; } // Add this line
+        public DbSet<ItemClickCount> ItemClickCounts { get; set; }
+
 
         // Override OnModelCreating to set up constraints and relationships, and to seed data.
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            // Seeding for RestaurantData
+            modelBuilder.Entity<RestaurantData>().HasData(
+                new RestaurantData
+                {
+                    Id = 1,
+                    RestaurantId = "one2one",
+                    Name = "The Gourmet Kitchen",
+                    Description = "A fine dining experience with a variety of international cuisines.",
+                    Address = "123 Foodie Lane, Gourmet City",
+                    Phone = "123-456-7890",
+                    Email = "contact@gourmetkitchen.com",
+                    Logo = "path/to/logo1.jpg",
+                    Cover = "path/to/cover1.jpg",
+                    BrandCode = "GK001"
+                },
+                new RestaurantData
+                {
+                    Id = 2,
+                    RestaurantId = "Rest002",
+                    Name = "Casual Bites",
+                    Description = "A casual place for friends and family to enjoy a great meal.",
+                    Address = "456 Casual Street, Food Town",
+                    Phone = "234-567-8901",
+                    Email = "hello@casualbites.com",
+                    Logo = "path/to/logo2.jpg",
+                    Cover = "path/to/cover2.jpg",
+                    BrandCode = "CB002"
+                }
+                // Add more seed data as needed
+            );
             // Seeding MenuCategories
             modelBuilder.Entity<MenuCategory>().HasData(
                 new MenuCategory
@@ -164,7 +201,43 @@ namespace Resturant.API.Data
                     StartDate = new DateTime(2024, 3, 1),
                     EndDate = new DateTime(2024, 5, 31)
                 }
+
+            
             );
+            // Seeding for AccountConfig
+            modelBuilder.Entity<AccountConfiguration>().HasData(
+                new AccountConfiguration
+                {
+                    AccountId = 1,
+                    RestaurantId = "Restaurant1",
+                    Schema = "Schema1",
+                    Email = "email1@example.com"
+                },
+                new AccountConfiguration
+                {
+                    AccountId = 2,
+                    RestaurantId = "Restaurant2",
+                    Schema = "Schema2",
+                    Email = "email2@example.com"
+                },
+                new AccountConfiguration
+                {
+                    AccountId = 3,
+                    RestaurantId = "Restaurant3",
+                    Schema = "Schema3",
+                    Email = "email3@example.com"
+                }
+            );
+            // Seed data for ItemClickCount
+            modelBuilder.Entity<ItemClickCount>().HasData(
+                new ItemClickCount { ItemID = 1, ClickCount = 0 },
+                new ItemClickCount { ItemID = 2, ClickCount = 0 } 
+            );
+
+            modelBuilder.Entity<MenuItem>()
+                .Property(e => e.Price)
+                .HasPrecision(10, 2); // Here, 10 is the precision and 2 is the scale.
+
 
             modelBuilder.Entity<ItemDescription>()
       .HasOne(id => id.MenuItem)
@@ -185,7 +258,13 @@ namespace Resturant.API.Data
                 .HasOne(r => r.MenuItem)
                 .WithMany(mi => mi.Reviews)
                 .HasForeignKey(r => r.ItemID);
+
+            modelBuilder.Entity<RestaurantData>()
+       .HasOne(r => r.AccountConfiguration)
+       .WithMany(a => a.RestaurantDatas)
+       .HasForeignKey(r => r.AccountId);
         }
+
 
 
     }

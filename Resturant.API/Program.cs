@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Resturant.API.Configurations;
 using Resturant.API.Contract;
 using Resturant.API.Data;
+using Resturant.API.Middleware;
 using Resturant.API.Repository;
 using Serilog;
 
@@ -33,6 +34,8 @@ builder.Services.AddScoped<IMenuItems, MenuItems>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<ISpecialOffersRepository, SpecialOffersRepository>();
 builder.Services.AddScoped<IItemDescriptionRepository, ItemDescriptionRepository>();
+builder.Services.AddScoped<IAccountConfigurations, AccountConfigurationsRepository>();
+builder.Services.AddScoped<IRestaurantDataRepository, RestaurantDataRepository>();
 
 var app = builder.Build();
 
@@ -42,7 +45,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging();
